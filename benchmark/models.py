@@ -68,27 +68,27 @@ class ConvNet(nn.Module):
         # Compute probabilities
         probs = F.log_softmax(x, dim=1)
         return probs
-def compare_weight(table,idx,reduce):
-    min_key=-1
-    min_value=float('inf')
+def compare_weight(table,idx,add):
+    max_key=-1
+    max_value=0
     for key,value in table.items():
-        if min_value>value:
-            min_key=key
-            min_value=value
-    if min_key==idx:      
+        if max_value<value:
+            max_key=key
+            max_value=value
+    if max_key==idx:      
         return True
     else:
-        table[idx]-=reduce
+        table[idx]+=add
         return False
 # Train and test models
-def train(epochs, arch, model, device, train_loader,value_table,order,reduce,training_time):
+def train(epochs, arch, model, device, train_loader,value_table,order,add,training_time):
     #train_data = get_train_data()
     optimiser = optim.SGD(model.parameters(), lr=0.001)
     
     total_time = 0
 
     pid = os.getpid()
-    value_table[pid]=float('inf') 
+    value_table[pid]=0
     
     for epoch in range(1, epochs + 1):
         start_time = time.time()
@@ -111,12 +111,12 @@ def train(epochs, arch, model, device, train_loader,value_table,order,reduce,tra
                 value_table[pid]=loss.item()
             
                 while (True):
-                    if compare_weight(value_table,pid,reduce):
+                    if compare_weight(value_table,pid,add):
                         break
            
                 optimiser.step()
                      
-                value_table[pid]=float('inf')
+                value_table[pid]=0
             else:
                 optimiser.step()
                 
