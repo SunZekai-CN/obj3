@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import os
 import time
 import json
-from utils import find_latest_log
 
 # Feedforward neural network
 class FeedforwardNet(nn.Module):
