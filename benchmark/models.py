@@ -129,11 +129,11 @@ def train(epochs, arch, model, device, train_loader,value_table,order,timeout,tr
         
         total_time += processing_time
     
-    training_time[pid] = total_time
     tag={}
     tag['need_update']=need_update
     tag['updated']=updated
-    value_table[pid]=tag
+    tag['training_time']=total_time
+    training_time[pid] =tag
     #print(f'Model metrics have been saved at: {latest_log}, with {total_time}s training time.')
 
 def test(model, device, test_loader, arch):

@@ -45,17 +45,15 @@ def hogwild(model_class, workers, epochs, arch, distributed, nodes, batches,orde
         for p in processes:
             p.join()
         times = []
-        for key,value in training_time.items():
-            times.append(value)
-        tag=np.array(times)
-        click.echo(f'Training: sum = {sum(tag)} , average = {np.mean(tag)} , max = {max(times)} , min = {min(times)} , median = {np.median(tag)}')
         need_update=0
         updated=0
-        for key,value in value_table.items():
+        for key,value in training_time.items():
+            times.append(value['training_time'])
             need_update+=value['need_update']
             updated+=value['updated']
-        click.echo(f'need to update {need_update} cases, successfully updated {updated} cases, rate is {}.')
-        print('need to update {} cases, successfully updated {} cases, rate is {:.2f}.\n'.format( need_update, updated,100. * correct / len(test_loader.dataset)))
+        tag=np.array(times)
+        click.echo(f'Training: sum = {sum(tag)} , average = {np.mean(tag)} , max = {max(times)} , min = {min(times)} , median = {np.median(tag)}')    
+        print('need to update {} cases, successfully updated {} cases, rate is {:.2f}.'.format( need_update, updated,100. * updated/need_update))
         test(model, device, test_loader, arch)
 
     else:
@@ -85,7 +83,7 @@ def conv_train(arch, epochs, workers, distributed, nodes, batches,order,timeout)
 @click.option('--nodes', default=1, help='number of cores to use.')
 @click.option('--batches', default=12, help='minibatch size to use.')
 @click.option('--order', default='y', help='wether to update paramters in order or not (y or n)')
-@click.option('--timeout', default=0.001, help='tiemout for each update')
+@click.option('--timeout', default=10, help='tiemout for each update')
 def main(epochs, arch, workers, distributed, nodes, batches,order,timeout):
     
     #print("start training...")

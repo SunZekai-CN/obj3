@@ -1,1 +1,1 @@
-python3 main.py --epochs=2 --workers=10 --arch=ff --order=y
+python3 main.py --epochs=2 --workers=20 --arch=ff --order=y
