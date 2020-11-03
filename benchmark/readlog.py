@@ -8,7 +8,7 @@ y='right'
 # 'loss' 'right' 'accuracy' 
 way='average'
 
-file = "./log/2/1.txt"
+file = "log.txt"
 # %%
 def preprocessing(line):
     new=line.replace('\n','').replace(',','').replace('=','').replace(':','').replace('/','').replace('(','').replace(')','').replace('%','')
@@ -34,6 +34,8 @@ def line2(lineData):
 def line3(lineData,test):
     test['need_update']=int(lineData[3])
     test['updated']=int(lineData[7])
+    test['update_rate']=float(lineData[11])
+    print(lineData)
     return test
 def line4(lineData,test):
     test['loss']=float(lineData[4])

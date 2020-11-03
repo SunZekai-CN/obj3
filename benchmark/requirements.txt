@@ -1,8 +1,0 @@
-pandas
-torch
-torchvision
-pyfiglet
-click
-datetime
-matplotlib
-seaborn

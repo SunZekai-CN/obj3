@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import os
 import time
 import json
+import random
 
 # Feedforward neural network
 class FeedforwardNet(nn.Module):
@@ -80,7 +81,7 @@ def compare_weight(table,idx):
     else:
         return False
 # Train and test models
-def train(epochs, arch, model, device, train_loader,value_table,order,timeout,training_time):
+def train(epochs, arch, model, device, train_loader,value_table,order,timeout,update_rate,training_time):
     #train_data = get_train_data()
     optimiser = optim.SGD(model.parameters(), lr=0.001)
     
@@ -121,6 +122,10 @@ def train(epochs, arch, model, device, train_loader,value_table,order,timeout,tr
                      
                 value_table[pid]=0
             else:
+                tag=random.random()
+                if (tag>=update_rate):
+                    continue
+                updated+=1
                 optimiser.step()
                 
         end_time = time.time()
