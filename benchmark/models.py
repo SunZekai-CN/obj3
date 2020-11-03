@@ -68,7 +68,7 @@ class ConvNet(nn.Module):
         # Compute probabilities
         probs = F.log_softmax(x, dim=1)
         return probs
-def compare_weight(table,idx,add):
+def compare_weight(table,idx):
     max_key=-1
     max_value=0
     for key,value in table.items():
@@ -78,10 +78,9 @@ def compare_weight(table,idx,add):
     if max_key==idx:      
         return True
     else:
-        table[idx]+=add
         return False
 # Train and test models
-def train(epochs, arch, model, device, train_loader,value_table,order,add,training_time):
+def train(epochs, arch, model, device, train_loader,value_table,order,timeout,training_time):
     #train_data = get_train_data()
     optimiser = optim.SGD(model.parameters(), lr=0.001)
     
@@ -89,13 +88,14 @@ def train(epochs, arch, model, device, train_loader,value_table,order,add,traini
 
     pid = os.getpid()
     value_table[pid]=0
-    
+    need_update=0
+    updated=0
     for epoch in range(1, epochs + 1):
         start_time = time.time()
         model.train()
            
         for batch_idx, (data, target) in enumerate(train_loader):
-        
+            need_update+=1
             data, target = data.to(device), target.to(device)
             optimiser.zero_grad()
             
@@ -109,11 +109,14 @@ def train(epochs, arch, model, device, train_loader,value_table,order,add,traini
             loss.backward()
             if order=='y':
                 value_table[pid]=loss.item()
-            
-                while (True):
-                    if compare_weight(value_table,pid,add):
+                start=time.time()
+                while (time.time()<start+timeout):
+                    if compare_weight(value_table,pid):
                         break
-           
+                if (time.time()>=start+timeout):
+                    value_table[pid]=0
+                    continue
+                updated+=1
                 optimiser.step()
                      
                 value_table[pid]=0
@@ -127,7 +130,10 @@ def train(epochs, arch, model, device, train_loader,value_table,order,add,traini
         total_time += processing_time
     
     training_time[pid] = total_time
-
+    tag={}
+    tag['need_update']=need_update
+    tag['updated']=updated
+    value_table[pid]=tag
     #print(f'Model metrics have been saved at: {latest_log}, with {total_time}s training time.')
 
 def test(model, device, test_loader, arch):

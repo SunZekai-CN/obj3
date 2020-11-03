@@ -12,7 +12,7 @@ testset = datasets.QMNIST("", train=False, download=True, transform=(transforms.
 
 test_loader = torch.utils.data.DataLoader(dataset=testset, batch_size=12, shuffle=True)
 
-def hogwild(model_class, workers, epochs, arch, distributed, nodes, batches,order,add):
+def hogwild(model_class, workers, epochs, arch, distributed, nodes, batches,order,timeout):
 
     torch.set_num_threads(nodes)
     
@@ -36,7 +36,7 @@ def hogwild(model_class, workers, epochs, arch, distributed, nodes, batches,orde
 
             train_loader = torch.utils.data.DataLoader(dataset=trainset, batch_size=batches, sampler=DistributedSampler(dataset=trainset,num_replicas=workers,rank=rank))
 
-            p = mp.Process(target=train, args=(epochs, arch, model, device, train_loader,value_table,order,add,training_time))
+            p = mp.Process(target=train, args=(epochs, arch, model, device, train_loader,value_table,order,timeout,training_time))
 
             p.start()
 
@@ -49,6 +49,13 @@ def hogwild(model_class, workers, epochs, arch, distributed, nodes, batches,orde
             times.append(value)
         tag=np.array(times)
         click.echo(f'Training: sum = {sum(tag)} , average = {np.mean(tag)} , max = {max(times)} , min = {min(times)} , median = {np.median(tag)}')
+        need_update=0
+        updated=0
+        for key,value in value_table.items():
+            need_update+=value['need_update']
+            updated+=value['updated']
+        click.echo(f'need to update {need_update} cases, successfully updated {updated} cases, rate is {}.')
+        print('need to update {} cases, successfully updated {} cases, rate is {:.2f}.\n'.format( need_update, updated,100. * correct / len(test_loader.dataset)))
         test(model, device, test_loader, arch)
 
     else:
@@ -60,15 +67,15 @@ def hogwild(model_class, workers, epochs, arch, distributed, nodes, batches,orde
         test(model, device, test_loader, arch)
 
 
-def ff_train(arch, epochs, workers, distributed, nodes, batches,order,add):
-    click.echo(f'Training neural {arch}-net with {epochs} epochs using {workers} workers and a batch size of {batches}, update paramter in order = {order}, add = {add}')
+def ff_train(arch, epochs, workers, distributed, nodes, batches,order,timeout):
+    click.echo(f'Training neural {arch}-net with {epochs} epochs using {workers} workers and a batch size of {batches}, update paramter in order = {order}, timeout = {timeout}')
     model_class = FeedforwardNet()
-    hogwild(model_class, workers, epochs, arch, distributed, nodes, batches,order,add)
+    hogwild(model_class, workers, epochs, arch, distributed, nodes, batches,order,timeout)
 
-def conv_train(arch, epochs, workers, distributed, nodes, batches,order,add):    
-    click.echo(f'Training neural {arch}-net with {epochs} epochs using {workers} workers and a batch size of {batches}, update paramter in order = {order}, add = {add}')
+def conv_train(arch, epochs, workers, distributed, nodes, batches,order,timeout):    
+    click.echo(f'Training neural {arch}-net with {epochs} epochs using {workers} workers and a batch size of {batches}, update paramter in order = {order}, timeout = {timeout}')
     model_class = ConvNet()
-    hogwild(model_class, workers, epochs, arch, distributed, nodes, batches,order,add)
+    hogwild(model_class, workers, epochs, arch, distributed, nodes, batches,order,timeout)
 
 @click.command()
 @click.option('--epochs', default=1, help='number of epochs to train neural network.')
@@ -78,16 +85,16 @@ def conv_train(arch, epochs, workers, distributed, nodes, batches,order,add):
 @click.option('--nodes', default=1, help='number of cores to use.')
 @click.option('--batches', default=12, help='minibatch size to use.')
 @click.option('--order', default='y', help='wether to update paramters in order or not (y or n)')
-@click.option('--add', default=0.001, help='number to add while update paramters fail')
-def main(epochs, arch, workers, distributed, nodes, batches,order,add):
+@click.option('--timeout', default=0.001, help='tiemout for each update')
+def main(epochs, arch, workers, distributed, nodes, batches,order,timeout):
     
     #print("start training...")
   
     if arch == 'ff':            
-        ff_train(arch, epochs, workers, distributed, nodes, batches,order,add)
+        ff_train(arch, epochs, workers, distributed, nodes, batches,order,timeout)
     
     elif arch == 'conv':
-        conv_train(arch, epochs, workers, distributed, nodes, batches,order,add)
+        conv_train(arch, epochs, workers, distributed, nodes, batches,order,timeout)
 
     
     #print("finish training...")

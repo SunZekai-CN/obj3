@@ -7,6 +7,8 @@ x='epochs'
 y='right' 
 # 'loss' 'right' 'accuracy' 
 way='average'
+
+file = "./log/2/1.txt"
 # %%
 def preprocessing(line):
     new=line.replace('\n','').replace(',','').replace('=','').replace(':','').replace('/','').replace('(','').replace(')','').replace('%','')
@@ -16,10 +18,10 @@ def line1(lineData):
     setting={}
     setting['arch']=lineData[2] 
     setting['epochs']=lineData[4]  
-    setting['processes']=lineData[7]
+    setting['workers']=lineData[7]
     setting['batch']=lineData[14]
     setting['order']=lineData[20]
-    setting['reduce']=lineData[23]
+    setting['timeout']=lineData[23]
     return setting
 def line2(lineData):
     training={}
@@ -30,12 +32,16 @@ def line2(lineData):
     training['median']=float(lineData[19])
     return training
 def line3(lineData,test):
+    test['need_update']=int(lineData[3])
+    test['updated']=int(lineData[7])
+    return test
+def line4(lineData,test):
     test['loss']=float(lineData[4])
     test['right']=int(lineData[6])
     test['cases']=int(lineData[8])
     test['accuracy']=float(lineData[9])
     return test
-f = open("log.txt")                
+f = open(file)                
 line = f.readline()        
 setting=[]
 test=[]        
@@ -47,7 +53,10 @@ while line:
     training=line2(lineData)
     line = f.readline()
     lineData=preprocessing(line)
-    test.append(line3(lineData,training))
+    training=line3(lineData,training)
+    line = f.readline()
+    lineData=preprocessing(line)
+    test.append(line4(lineData,training))
     line = f.readline()
     line = f.readline() 
 f.close()  
