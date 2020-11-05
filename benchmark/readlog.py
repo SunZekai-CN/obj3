@@ -228,11 +228,13 @@ def each_line2(line,case):
             continue
         xs.append(data['workers'])
         ys.append(data[way])
+        print(data['workers'],data[way])
     return np.array(xs),np.array(ys)
 
 def draw2(test,setting):
     line,cases=clasify2(test,setting)
     for case in cases:
+        print(case)
         xs,ys=each_line2(line,case)
         plt.plot(xs,ys,label='timeout='+case)
     plt.xlabel('workers')
